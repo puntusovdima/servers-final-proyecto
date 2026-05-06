@@ -11,6 +11,7 @@ import AppError from './utils/AppError.js';
 import UserRouter from './routes/user.routes.js';
 import ClientRouter from './routes/client.routes.js';
 import ProjectRouter from './routes/project.routes.js';
+import DeliveryNoteRouter from './routes/deliveryNote.routes.js';
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.get('/health', (req, res) => {
 app.use('/api/user', UserRouter);
 app.use('/api/client', ClientRouter);
 app.use('/api/project', ProjectRouter);
+app.use('/api/deliverynote', DeliveryNoteRouter);
 
 app.use((req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
