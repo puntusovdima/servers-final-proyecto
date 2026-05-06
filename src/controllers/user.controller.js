@@ -418,7 +418,6 @@ export const inviteUser = async (req, res, next) => {
         });
 
         notificationService.emit('user:invited', invitedUser.email);
-        console.log(`[Phase 4] Invited user ${invitedUser.email} with temp password: ${tempPassword}`);
 
         res.status(201).json({
             status: 'success',
