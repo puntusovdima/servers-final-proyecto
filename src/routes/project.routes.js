@@ -13,7 +13,7 @@ const router = Router();
 router.use(protect);
 
 /**
- * @openapi
+ * @swagger
  * /api/project:
  *   post:
  *     tags: [Projects]
@@ -49,7 +49,7 @@ router.use(protect);
 router.post('/', createProject);
 
 /**
- * @openapi
+ * @swagger
  * /api/project:
  *   get:
  *     tags: [Projects]
@@ -67,7 +67,7 @@ router.post('/', createProject);
 router.get('/', getProjects);
 
 /**
- * @openapi
+ * @swagger
  * /api/project/{id}:
  *   get:
  *     tags: [Projects]
@@ -85,7 +85,7 @@ router.get('/', getProjects);
 router.get('/:id', getProject);
 
 /**
- * @openapi
+ * @swagger
  * /api/project/{id}:
  *   put:
  *     tags: [Projects]
@@ -108,7 +108,7 @@ router.get('/:id', getProject);
 router.put('/:id', updateProject);
 
 /**
- * @openapi
+ * @swagger
  * /api/project/{id}:
  *   delete:
  *     tags: [Projects]

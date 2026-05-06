@@ -1,5 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import { env } from './env.js';
+import path from 'path';
 
 const options = {
   definition: {
@@ -69,6 +70,22 @@ const options = {
             deleted: { type: 'boolean', example: false }
           }
         },
+        DeliveryNote: {
+          type: 'object',
+          required: ['project', 'client', 'format', 'description', 'workDate'],
+          properties: {
+            _id: { type: 'string', example: '65f8b3a2c9d1e20012345678' },
+            project: { type: 'string', example: '65f8b3a2c9d1e20012345678' },
+            client: { type: 'string', example: '65f8b3a2c9d1e20012345678' },
+            format: { type: 'string', enum: ['material', 'hours'], example: 'hours' },
+            hours: { type: 'number', example: 8 },
+            material: { type: 'string', example: 'Cemento 50kg' },
+            description: { type: 'string', example: 'Trabajos de cimentación' },
+            workDate: { type: 'string', format: 'date', example: '2024-03-20' },
+            signed: { type: 'boolean', example: false },
+            deleted: { type: 'boolean', example: false }
+          }
+        },
         Error: {
           type: 'object',
           properties: {
@@ -79,7 +96,8 @@ const options = {
       }
     }
   },
-  apis: [`${process.cwd()}/src/routes/*.js`]
+  apis: ['./src/routes/*.js']
 };
 
-export default swaggerJsdoc(options);
+const swaggerSpecs = await swaggerJsdoc(options);
+export default swaggerSpecs;

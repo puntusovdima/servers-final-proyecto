@@ -13,7 +13,7 @@ const router = Router();
 router.use(protect);
 
 /**
- * @openapi
+ * @swagger
  * /api/deliverynote:
  *   post:
  *     tags: [Delivery Notes]
@@ -41,7 +41,7 @@ router.use(protect);
 router.post('/', createDeliveryNote);
 
 /**
- * @openapi
+ * @swagger
  * /api/deliverynote:
  *   get:
  *     tags: [Delivery Notes]
@@ -61,7 +61,7 @@ router.post('/', createDeliveryNote);
 router.get('/', getDeliveryNotes);
 
 /**
- * @openapi
+ * @swagger
  * /api/deliverynote/{id}:
  *   get:
  *     tags: [Delivery Notes]
@@ -79,7 +79,7 @@ router.get('/', getDeliveryNotes);
 router.get('/:id', getDeliveryNote);
 
 /**
- * @openapi
+ * @swagger
  * /api/deliverynote/{id}:
  *   put:
  *     tags: [Delivery Notes]
@@ -97,7 +97,7 @@ router.get('/:id', getDeliveryNote);
 router.put('/:id', updateDeliveryNote);
 
 /**
- * @openapi
+ * @swagger
  * /api/deliverynote/{id}:
  *   delete:
  *     tags: [Delivery Notes]

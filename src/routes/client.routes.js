@@ -15,7 +15,7 @@ const router = Router();
 router.use(protect);
 
 /**
- * @openapi
+ * @swagger
  * /api/client:
  *   post:
  *     tags: [Clients]
@@ -36,7 +36,7 @@ router.use(protect);
 router.post('/', createClient);
 
 /**
- * @openapi
+ * @swagger
  * /api/client:
  *   get:
  *     tags: [Clients]
@@ -62,7 +62,7 @@ router.post('/', createClient);
 router.get('/', getClients);
 
 /**
- * @openapi
+ * @swagger
  * /api/client/archived:
  *   get:
  *     tags: [Clients]
@@ -75,7 +75,7 @@ router.get('/', getClients);
 router.get('/archived', getArchivedClients);
 
 /**
- * @openapi
+ * @swagger
  * /api/client/{id}:
  *   get:
  *     tags: [Clients]
@@ -95,7 +95,7 @@ router.get('/archived', getArchivedClients);
 router.get('/:id', getClient);
 
 /**
- * @openapi
+ * @swagger
  * /api/client/{id}:
  *   put:
  *     tags: [Clients]
@@ -120,7 +120,7 @@ router.get('/:id', getClient);
 router.put('/:id', updateClient);
 
 /**
- * @openapi
+ * @swagger
  * /api/client/{id}:
  *   delete:
  *     tags: [Clients]
@@ -143,7 +143,7 @@ router.put('/:id', updateClient);
 router.delete('/:id', deleteClient);
 
 /**
- * @openapi
+ * @swagger
  * /api/client/{id}/restore:
  *   patch:
  *     tags: [Clients]
