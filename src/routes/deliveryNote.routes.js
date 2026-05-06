@@ -4,13 +4,62 @@ import {
   getDeliveryNotes, 
   getDeliveryNote, 
   updateDeliveryNote, 
-  deleteDeliveryNote 
+  deleteDeliveryNote,
+  signDeliveryNote,
+  getDeliveryNotePDF
 } from '../controllers/deliveryNote.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
+import upload from '../middleware/upload.js';
 
 const router = Router();
 
 router.use(protect);
+
+router.patch('/:id/sign', upload.single('signature'), signDeliveryNote);
+router.get('/pdf/:id', getDeliveryNotePDF);
+
+/**
+ * @swagger
+ * /api/deliverynote/pdf/{id}:
+ *   get:
+ *     tags: [DeliveryNotes]
+ *     summary: Get delivery note PDF
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: PDF file or redirect to cloud storage
+ */
+
+/**
+ * @swagger
+ * /api/deliverynote/{id}/sign:
+ *   patch:
+ *     tags: [DeliveryNotes]
+ *     summary: Sign a delivery note and generate PDF
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               signature:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Delivery note signed and PDF generated
+ */
 
 /**
  * @swagger

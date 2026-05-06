@@ -115,4 +115,32 @@ describe('DeliveryNote API', () => {
       expect(res.body.data.pagination.totalItems).toBe(1);
     });
   });
+
+  describe('PATCH /api/deliverynote/:id/sign', () => {
+    it('should sign a delivery note and generate PDF', async () => {
+      const noteRes = await request(app)
+        .post('/api/deliverynote')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          project: projectId,
+          client: clientId,
+          format: 'hours',
+          hours: 2,
+          description: 'Short task',
+          workDate: '2024-03-22'
+        });
+      
+      const noteId = noteRes.body.data.deliveryNote._id;
+
+      const res = await request(app)
+        .patch(`/api/deliverynote/${noteId}/sign`)
+        .set('Authorization', `Bearer ${token}`)
+        .attach('signature', 'temp/dummy_signature.png')
+        .expect(200);
+
+      expect(res.body.data.deliveryNote.signed).toBe(true);
+      expect(res.body.data.deliveryNote.signatureUrl).toBeDefined();
+      expect(res.body.data.deliveryNote.pdfUrl).toBeDefined();
+    });
+  });
 });

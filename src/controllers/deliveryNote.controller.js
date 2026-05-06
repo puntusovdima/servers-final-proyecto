@@ -3,6 +3,10 @@ import Project from '../models/Project.js';
 import AppError from '../utils/AppError.js';
 import { createDeliveryNoteSchema, updateDeliveryNoteSchema } from '../validators/deliveryNote.validator.js';
 import { notifyClient } from '../services/socket.service.js';
+import { uploadFile } from '../services/storage.service.js';
+import { generateDeliveryNotePDF } from '../services/pdf.service.js';
+import path from 'path';
+import fs from 'fs';
 
 export const createDeliveryNote = async (req, res, next) => {
   try {
@@ -150,6 +154,68 @@ export const deleteDeliveryNote = async (req, res, next) => {
       status: 'success',
       message: 'Delivery note archived successfully'
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const signDeliveryNote = async (req, res, next) => {
+  try {
+    if (!req.file) throw new AppError('Signature image is required', 400);
+
+    const deliveryNote = await DeliveryNote.findOne({ 
+      _id: req.params.id, 
+      company: req.user.company,
+      signed: false 
+    }).populate('project client company');
+
+    if (!deliveryNote) throw new AppError('Delivery note not found or already signed', 404);
+
+    const signatureUpload = await uploadFile(req.file.path, 'signatures');
+    
+    deliveryNote.signed = true;
+    deliveryNote.signatureUrl = signatureUpload.url;
+
+    const tempPdfPath = path.join(process.cwd(), 'temp', `albaran_${deliveryNote._id}.pdf`);
+    if (!fs.existsSync(path.dirname(tempPdfPath))) {
+      fs.mkdirSync(path.dirname(tempPdfPath), { recursive: true });
+    }
+
+    await generateDeliveryNotePDF(deliveryNote, tempPdfPath);
+    const pdfUpload = await uploadFile(tempPdfPath, 'pdfs');
+
+    deliveryNote.pdfUrl = pdfUpload.url;
+    await deliveryNote.save();
+
+    fs.unlinkSync(tempPdfPath);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Delivery note signed and PDF generated',
+      data: { deliveryNote }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getDeliveryNotePDF = async (req, res, next) => {
+  try {
+    const deliveryNote = await DeliveryNote.findOne({ 
+      _id: req.params.id, 
+      company: req.user.company 
+    });
+
+    if (!deliveryNote || !deliveryNote.pdfUrl) {
+      throw new AppError('PDF not found for this delivery note', 404);
+    }
+
+    if (deliveryNote.pdfUrl.startsWith('http')) {
+      return res.redirect(deliveryNote.pdfUrl);
+    }
+
+    const fullPath = path.join(process.cwd(), deliveryNote.pdfUrl);
+    res.sendFile(fullPath);
   } catch (error) {
     next(error);
   }
