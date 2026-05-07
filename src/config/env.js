@@ -7,16 +7,15 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32).default('a'.repeat(32)),
   JWT_REFRESH_SECRET: z.string().min(32).default('b'.repeat(32)),
   JWT_EXPIRES_IN: z.string().default('7d'),
-  
-  // Cloudinary
+
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
 
-  // Slack
   SLACK_WEBHOOK: z.preprocess((val) => (val === '' ? undefined : val), z.string().url().optional()),
 
-  // Mail (from intermedia)
+  EMAIL_HOST: z.string().default('smtp.ethereal.email'),
+  EMAIL_PORT: z.coerce.number().default(587),
   EMAIL_USER: z.string().optional(),
   EMAIL_PASS: z.string().optional(),
 });

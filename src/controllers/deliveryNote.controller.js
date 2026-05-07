@@ -2,7 +2,7 @@ import DeliveryNote from '../models/DeliveryNote.js';
 import Project from '../models/Project.js';
 import AppError from '../utils/AppError.js';
 import { createDeliveryNoteSchema, updateDeliveryNoteSchema } from '../validators/deliveryNote.validator.js';
-import { notifyClient } from '../services/socket.service.js';
+import { notifyCompany } from '../services/socket.service.js';
 import { uploadFile } from '../services/storage.service.js';
 import { generateDeliveryNotePDF } from '../services/pdf.service.js';
 import path from 'path';
@@ -28,7 +28,7 @@ export const createDeliveryNote = async (req, res, next) => {
       company: req.user.company
     });
 
-    notifyClient(validatedData.client, 'deliveryNote:created', {
+    notifyCompany(req.user.company, 'deliverynote:new', {
       message: `New delivery note created for project: ${project.name}`,
       deliveryNoteId: deliveryNote._id
     });
@@ -142,11 +142,16 @@ export const updateDeliveryNote = async (req, res, next) => {
 
 export const deleteDeliveryNote = async (req, res, next) => {
   try {
-    const deliveryNote = await DeliveryNote.findOneAndUpdate(
-      { _id: req.params.id, company: req.user.company },
-      { deleted: true },
-      { new: true }
-    );
+    const deliveryNote = await DeliveryNote.findOne({ 
+      _id: req.params.id, 
+      company: req.user.company 
+    });
+    
+    if (!deliveryNote) throw new AppError('Delivery note not found', 404);
+    if (deliveryNote.signed) throw new AppError('Cannot delete or archive a signed delivery note', 400);
+
+    deliveryNote.deleted = true;
+    await deliveryNote.save();
 
     if (!deliveryNote) throw new AppError('Delivery note not found', 404);
 
@@ -183,16 +188,30 @@ export const signDeliveryNote = async (req, res, next) => {
 
     await generateDeliveryNotePDF(deliveryNote, tempPdfPath);
     const pdfUpload = await uploadFile(tempPdfPath, 'pdfs');
+    
+    if (!pdfUpload || !pdfUpload.url) {
+      throw new AppError('Failed to upload PDF', 500);
+    }
 
-    deliveryNote.pdfUrl = pdfUpload.url;
-    await deliveryNote.save();
+    const updatedNote = await DeliveryNote.findByIdAndUpdate(deliveryNote._id, {
+      $set: {
+        signed: true,
+        signatureUrl: signatureUpload.url,
+        pdfUrl: pdfUpload.url
+      }
+    }, { new: true });
 
     fs.unlinkSync(tempPdfPath);
 
     res.status(200).json({
       status: 'success',
       message: 'Delivery note signed and PDF generated',
-      data: { deliveryNote }
+      data: { deliveryNote: updatedNote }
+    });
+
+    notifyCompany(req.user.company, 'deliverynote:signed', {
+      message: `Delivery note for project ${deliveryNote.project.name} has been signed`,
+      deliveryNoteId: deliveryNote._id
     });
   } catch (error) {
     next(error);

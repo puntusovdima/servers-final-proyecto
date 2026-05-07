@@ -88,4 +88,75 @@ describe('Project API', () => {
         .expect(404);
     });
   });
+
+  describe('GET /api/project', () => {
+    it('should return a list of projects with pagination', async () => {
+      await request(app)
+        .post('/api/project')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          client: clientId,
+          name: 'Project 1',
+          projectCode: 'P1',
+          email: 'p1@test.com',
+          address: { street: 'S', number: '1', postal: '1', city: 'C', province: 'P' }
+        });
+
+      const res = await request(app)
+        .get('/api/project')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(res.body.data.projects).toHaveLength(1);
+      expect(res.body.pagination).toBeDefined();
+    });
+  });
+
+  describe('Archive and Restore', () => {
+    it('should archive and then restore a project', async () => {
+      const projRes = await request(app)
+        .post('/api/project')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          client: clientId,
+          name: 'Project To Archive',
+          projectCode: 'ARCH-001',
+          email: 'arch@test.com',
+          address: { street: 'S', number: '1', postal: '1', city: 'C', province: 'P' }
+        });
+      
+      const projId = projRes.body.data.project._id;
+
+      // Archive
+      await request(app)
+        .delete(`/api/project/${projId}?soft=true`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      // Verify it's not in active list
+      const listRes = await request(app)
+        .get('/api/project')
+        .set('Authorization', `Bearer ${token}`);
+      expect(listRes.body.data.projects.find(p => p._id === projId)).toBeUndefined();
+
+      // Verify it is in archived list
+      const archListRes = await request(app)
+        .get('/api/project/archived')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+      expect(archListRes.body.data.projects.some(p => p._id === projId)).toBe(true);
+
+      // Restore
+      await request(app)
+        .patch(`/api/project/${projId}/restore`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      // Verify it's back in active list
+      const listRes2 = await request(app)
+        .get('/api/project')
+        .set('Authorization', `Bearer ${token}`);
+      expect(listRes2.body.data.projects.some(p => p._id === projId)).toBe(true);
+    });
+  });
 });

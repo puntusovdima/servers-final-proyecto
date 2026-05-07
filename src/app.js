@@ -53,6 +53,12 @@ app.get('/health', (req, res) => {
     });
 });
 
+if (process.env.NODE_ENV !== 'production') {
+    app.get('/api/test/error', (req, res) => {
+        throw new Error('Test 500 Error');
+    });
+}
+
 app.use('/api/user', UserRouter);
 app.use('/api/client', ClientRouter);
 app.use('/api/project', ProjectRouter);

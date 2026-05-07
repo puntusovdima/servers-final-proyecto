@@ -1,11 +1,7 @@
 import mongoose from 'mongoose';
 
-/**
- * Company Schema definition.
- * It tracks the organization that groups users together.
- */
 const companySchema = new mongoose.Schema({
-    // ObjectId linking back to the User document who created this company
+
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -20,7 +16,7 @@ const companySchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    // Inline address sub-document for simplicity
+
     address: {
         street: String,
         number: String,
@@ -28,21 +24,20 @@ const companySchema = new mongoose.Schema({
         city: String,
         province: String
     },
-    // URL to the logo (to be implemented via Multer later)
+
     logo: String,
-    
-    // Freelance indicator. If true, CIF is their NIF and it's a 1-person company
+
     isFreelance: {
         type: Boolean,
         default: false
     },
-    // Used for "Soft Delete". If true, we pretend it doesn't exist in queries.
+
     deleted: {
         type: Boolean,
         default: false
     }
 }, {
-    // Automatically manage `createdAt` and `updatedAt` properties
+
     timestamps: true 
 });
 

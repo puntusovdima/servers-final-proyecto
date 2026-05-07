@@ -1,6 +1,7 @@
 import Client from '../models/Client.js';
 import AppError from '../utils/AppError.js';
 import { createClientSchema, updateClientSchema } from '../validators/client.validator.js';
+import { notifyCompany } from '../services/socket.service.js';
 
 export const createClient = async (req, res, next) => {
   try {
@@ -28,6 +29,11 @@ export const createClient = async (req, res, next) => {
     res.status(201).json({
       status: 'success',
       data: { client }
+    });
+
+    notifyCompany(req.user.company, 'client:new', {
+      message: `New client created: ${client.name}`,
+      client
     });
   } catch (error) {
     if (error.name === 'ZodError') return next(new AppError(error.issues[0].message, 400));

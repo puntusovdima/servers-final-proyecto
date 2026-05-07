@@ -55,9 +55,7 @@ export const generateDeliveryNotePDF = async (deliveryNote, outputPath) => {
         doc.moveDown();
         try {
           if (deliveryNote.signatureUrl.startsWith('http')) {
-            // In a real scenario with Cloudinary, we might need to download the image first
-            // but for now, we assume local or we'd use a different approach.
-            // For testing/fallback, if it's local we just use the path.
+
           } else {
             const signaturePath = path.join(process.cwd(), deliveryNote.signatureUrl);
             if (fs.existsSync(signaturePath)) {

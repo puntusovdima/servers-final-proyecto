@@ -2,6 +2,7 @@ import Project from '../models/Project.js';
 import Client from '../models/Client.js';
 import AppError from '../utils/AppError.js';
 import { createProjectSchema, updateProjectSchema } from '../validators/project.validator.js';
+import { notifyCompany } from '../services/socket.service.js';
 
 export const createProject = async (req, res, next) => {
   try {
@@ -31,6 +32,11 @@ export const createProject = async (req, res, next) => {
       status: 'success',
       data: { project }
     });
+
+    notifyCompany(req.user.company, 'project:new', {
+      message: `New project created: ${project.name}`,
+      project
+    });
   } catch (error) {
     if (error.name === 'ZodError') return next(new AppError(error.issues[0].message, 400));
     next(error);
@@ -39,18 +45,32 @@ export const createProject = async (req, res, next) => {
 
 export const getProjects = async (req, res, next) => {
   try {
-    const { clientId } = req.query;
+    const { page = 1, limit = 10, client: clientId, name, active, sort = '-createdAt' } = req.query;
     const filter = { company: req.user.company, deleted: false };
     
-    if (clientId) {
-      filter.client = clientId;
-    }
+    if (clientId) filter.client = clientId;
+    if (name) filter.name = { $regex: name, $options: 'i' };
+    if (active) filter.active = active === 'true';
 
-    const projects = await Project.find(filter).populate('client', 'name email');
+    const skip = (page - 1) * limit;
+    
+    const [projects, totalItems] = await Promise.all([
+      Project.find(filter)
+        .populate('client', 'name email')
+        .sort(sort)
+        .skip(skip)
+        .limit(Number(limit)),
+      Project.countDocuments(filter)
+    ]);
 
     res.status(200).json({
       status: 'success',
       results: projects.length,
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: Number(page)
+      },
       data: { projects }
     });
   } catch (error) {
@@ -123,6 +143,37 @@ export const deleteProject = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       message: `Project ${soft === 'true' ? 'archived' : 'deleted'} successfully`
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getArchivedProjects = async (req, res, next) => {
+  try {
+    const projects = await Project.find({ company: req.user.company, deleted: true }).populate('client');
+    res.status(200).json({
+      status: 'success',
+      data: { projects }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const restoreProject = async (req, res, next) => {
+  try {
+    const project = await Project.findOneAndUpdate(
+      { _id: req.params.id, company: req.user.company, deleted: true },
+      { deleted: false },
+      { new: true }
+    );
+
+    if (!project) throw new AppError('Archived project not found', 404);
+
+    res.status(200).json({
+      status: 'success',
+      data: { project }
     });
   } catch (error) {
     next(error);

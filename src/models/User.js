@@ -1,19 +1,16 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-/**
- * User Schema definition.
- * Represents all application users (admins and guests).
- */
+
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true // Automatically creates a unique index in MongoDB
+        unique: true
     },
     password: {
         type: String,
         required: true,
-        select: false // Prevents the password from being returned in standard queries
+        select: false
     },
     name: String,
     lastName: String,
@@ -21,15 +18,15 @@ const userSchema = new mongoose.Schema({
     
     role: {
         type: String,
-        enum: ['admin', 'guest'], // Restricts value to these options
+        enum: ['admin', 'guest'],
         default: 'admin',
-        index: true // Standard index to speed up role-based queries
+        index: true
     },
     status: {
         type: String,
         enum: ['pending', 'verified'],
         default: 'pending',
-        index: true // Speeds up queries like "find all verified users"
+        index: true
     },
     
     verificationCode: String,
@@ -37,14 +34,12 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 3
     },
-    
-    // Stores the current refresh token for session invalidation (Point 7)
+
     refreshToken: {
         type: String,
-        select: false // Not needed in typical client responses
+        select: false
     },
 
-    // Reference to the company this user belongs to
     company: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Company',
@@ -65,16 +60,11 @@ const userSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    // Ensures virtual fields are included when converting the document to JSON or regular Object
+
     toJSON: { virtuals: true },
     toObject: { virtuals: true } 
 });
 
-/**
- * Virtual Property: fullName
- * This data is not physically saved in MongoDB. It's computed on-the-fly
- * whenever we fetch a User document.
- */
 userSchema.virtual('fullName').get(function() {
     if (this.name && this.lastName) {
         return `${this.name} ${this.lastName}`;
@@ -87,7 +77,7 @@ userSchema.virtual('fullName').get(function() {
 });
 
 userSchema.pre('save', async function() {
-    // Check if the password has been modified, if not, skip hashing
+
     if (!this.isModified('password')) {
         return;
     }

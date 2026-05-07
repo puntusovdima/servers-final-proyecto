@@ -1,22 +1,35 @@
-/**
- * Centralized error handling middleware in Express.
- * Every time we call `next(error)` in any controller or route, it ends up here.
- */
+import { sendSlackNotification } from '../services/slack.service.js';
+
 export const errorHandler = (err, req, res, next) => {
-    // Default values if an error object is thrown without statusCode or status
-    err.statusCode = err.statusCode || 500;
+    let statusCode = err.statusCode || 500;
+    let message = err.message || "Internal Server Error";
+
+    if (err.name === 'CastError') {
+        statusCode = 404;
+        message = `Resource not found with id of ${err.value}`;
+    }
     
-    // In development or when requested, we might want to log the full stack trace.
-    // For now, we will just format a standard JSON response.
-    
+    if (err.code === 11000) {
+        statusCode = 409;
+        message = 'Duplicate field value entered';
+    }
+
     const response = {
         status: "error",
-        message: err.message || "Internal Server Error"
+        message
     };
 
-    // Include the stack trace only if it's an operational error or in development mode
-    // (We will expand this conditionally later if needed, right now we just return the basics)
-    console.error(`[Error Handler] ${err.statusCode} - ${err.message}`);
+    if (statusCode >= 500) {
+        const slackMessage = `🚨 *5XX Error Detected*\n` +
+            `*Method:* ${req.method}\n` +
+            `*Path:* ${req.originalUrl}\n` +
+            `*Status Code:* ${statusCode}\n` +
+            `*Message:* ${message}\n` +
+            `*Stack Trace:* \`\`\`${err.stack}\`\`\``;
+        sendSlackNotification(slackMessage);
+    }
 
-    res.status(err.statusCode).json(response);
+    console.error(`[Error Handler] ${statusCode} - ${message}`);
+
+    res.status(statusCode).json(response);
 };

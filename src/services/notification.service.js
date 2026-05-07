@@ -1,13 +1,14 @@
 import { EventEmitter } from 'events';
 import { sendSlackNotification } from './slack.service.js';
+import { sendVerificationEmail } from './mail.service.js';
 
 class NotificationService extends EventEmitter {}
 const notificationService = new NotificationService();
 
-// Setup listeners to fulfill the Event System requirement
-notificationService.on('user:registered', (email) => {
+notificationService.on('user:registered', ({ email, code }) => {
     console.log(`[Notification Service] 🆕 User Registered: ${email}`);
     sendSlackNotification(`🆕 *New User Registered*: ${email}`);
+    sendVerificationEmail(email, code);
 });
 
 notificationService.on('user:verified', (email) => {
