@@ -80,10 +80,58 @@ const options = {
             format: { type: 'string', enum: ['material', 'hours'], example: 'hours' },
             hours: { type: 'number', example: 8 },
             material: { type: 'string', example: 'Cemento 50kg' },
+            workers: {
+              type: 'array',
+              items: { type: 'string', example: '65f8b3a2c9d1e20012345678' },
+              description: 'Worker user IDs assigned to this delivery note (hours format)'
+            },
             description: { type: 'string', example: 'Trabajos de cimentación' },
             workDate: { type: 'string', format: 'date', example: '2024-03-20' },
             signed: { type: 'boolean', example: false },
+            signatureUrl: { type: 'string', example: 'https://res.cloudinary.com/...' },
+            pdfUrl: { type: 'string', example: 'https://res.cloudinary.com/...' },
             deleted: { type: 'boolean', example: false }
+          }
+        },
+        User: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string', example: '65f8b3a2c9d1e20012345678' },
+            email: { type: 'string', format: 'email', example: 'user@example.com' },
+            name: { type: 'string', example: 'Juan' },
+            lastName: { type: 'string', example: 'García' },
+            nif: { type: 'string', example: '12345678A' },
+            role: { type: 'string', enum: ['admin', 'guest'], example: 'admin' },
+            status: { type: 'string', enum: ['pending', 'verified'], example: 'pending' },
+            company: { type: 'string', example: '65f8b3a2c9d1e20012345678' }
+          }
+        },
+        AuthResponse: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', example: 'success' },
+            data: {
+              type: 'object',
+              properties: {
+                accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+                refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+                user: { $ref: '#/components/schemas/User' }
+              }
+            }
+          }
+        },
+        ValidationError: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', example: 'error' },
+            message: { type: 'string', example: 'material: Material is required for material format' }
+          }
+        },
+        ConflictError: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', example: 'error' },
+            message: { type: 'string', example: 'A client with this CIF already exists in your company' }
           }
         },
         Error: {
