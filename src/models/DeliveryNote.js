@@ -34,6 +34,10 @@ const deliveryNoteSchema = new mongoose.Schema({
     type: Number,
     required: function() { return this.format === 'hours'; }
   },
+  workers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   description: {
     type: String,
     required: true
